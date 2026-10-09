@@ -1,279 +1,283 @@
-﻿# Dynamic Machine Data Management & Local Risk Prediction
+﻿
+# Dynamic Machine Data Management & Local Risk Prediction
 
-A full-stack machine management application developed using Python, Flask, MySQL, JavaScript, and scikit-learn. It supports configurable machine attributes, dynamically generated forms, CRUD operations, and local machine risk prediction using a Random Forest classifier.
+A full-stack web application for managing machine records with dynamically configurable fields and predicting machine risk levels using a locally trained Machine Learning model.
+
+The application uses Flask, MySQL, JavaScript, and scikit-learn. It supports machine CRUD operations, flexible field definitions, input validation, and risk predictions without relying on external prediction APIs.
 
 ## Features
 
-- Create configurable machine fields with text, number, and dropdown types.
-- Edit and delete custom fields.
-- Automatically generate machine forms based on configured attributes.
-- Add, view, edit, and delete machine records.
-- Store flexible machine attributes using MySQL JSON columns.
-- Add optional fields such as Humidity without changing the database schema.
-- Predict Low, Medium, or High Risk using a local Random Forest classifier.
-- Validate required fields, numeric values, and dropdown selections.
-- Normalize numeric inputs before storing new or updated machine records.
-- Protect core machine attributes required by the prediction model.
-- Responsive browser-based dashboard.
+- Create, view, update, and delete machine records.
+- Add and manage dynamic machine fields.
+- Store flexible machine attributes using MySQL JSON.
+- Generate input forms based on field definitions.
+- Validate required fields and numeric inputs.
+- Predict machine risk as Low Risk, Medium Risk, or High Risk.
+- Run the Machine Learning model locally.
+- Evaluate the model using a separate synthetic dataset.
+- Test application behavior using pytest.
 
 ## Technology Stack
 
 | Component | Technology |
 |---|---|
-| Backend | Python 3, Flask |
+| Backend | Python, Flask |
 | Database | MySQL |
 | Frontend | HTML, CSS, JavaScript |
 | Machine Learning | scikit-learn, NumPy |
 | ML Algorithm | Random Forest Classifier |
 | Testing | pytest |
-| Configuration | python-dotenv |
+| Configuration | Environment variables |
 
 ## System Architecture
 
-The application follows a local full-stack architecture:
+The application follows this workflow:
 
-Browser (HTML, CSS, JavaScript)
-â†“
-Flask REST API (`app.py`)
-â†“
-MySQL database (`fields`, `machines`) and local ML model (`ml/model.py`)
-â†“
-Flask API response
-â†“
-Browser dashboard
+1. Users interact with the web interface.
+2. JavaScript communicates with the Flask backend.
+3. Flask validates requests and performs database operations.
+4. MySQL stores field definitions and machine records.
+5. The local Machine Learning model generates risk predictions.
+6. Prediction results are returned to the user interface.
 
-**Application workflow:**
+```text
+             User
+              |
+              v
+     HTML / CSS / JavaScript
+              |
+              v
+         Flask Backend
+          /         \
+         v           v
+   MySQL Database   Local ML Model
+         |           |
+         v           v
+   Machine Records  Risk Prediction
+```
 
-1. Users configure machine attributes through the web interface.
-2. Flask receives API requests and validates submitted information.
-3. MySQL stores field definitions and machine records.
-4. Users request risk predictions for individual machines.
-5. Flask retrieves the machine's attributes from MySQL.
-6. The local Random Forest model processes Temperature, Pressure, and Vibration.
-7. Flask returns the predicted risk category to the browser.
+## Project Structure
 
-The ML model is trained automatically when the application imports `ml/model.py`. It runs within the Flask process and does not require a separate machine learning server or external prediction API.
+```text
+machine-risk-assessment/
+|
+|-- app.py
+|-- schema.sql
+|-- requirements.txt
+|-- README.md
+|-- .gitignore
+|
+|-- ml/
+|   |-- model.py
+|   |-- evaluate.py
+|
+|-- tests/
+|   |-- test_app.py
+|   |-- test_model.py
+|
+|-- templates/
+|   |-- index.html
+|
+|-- static/
+|   |-- css/
+|   |-- js/
+```
+
+The project also uses a local `.env` file for configuration. This file should not be committed to GitHub.
+
+## Database Design
+
+The application uses a MySQL database named:
+
+`machine_risks_db`
+
+It contains two main tables:
+
+### 1. fields
+
+Stores the definitions of machine attributes.
+
+Field definitions determine which inputs are available in the machine form, including their names, data types, and validation requirements.
+
+### 2. machines
+
+Stores machine records and their associated attributes.
+
+Machine attributes are stored using a JSON column, allowing records to contain flexible sets of fields without requiring a database schema change for every new attribute.
+
+### Why JSON Storage?
+
+Traditional relational tables require fixed columns.
+
+By storing machine attributes as JSON, the application can support additional fields without repeatedly altering the machines table.
+
+The database structure is documented in `schema.sql`.
 
 ## Installation and Setup
 
-### Prerequisites
-
-- Python 3 (tested with Python 3.14.3)
-- A running MySQL server
-- Git
-- pip
-
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Pravalika2164/machine_risk_assessment.git
 cd machine_risk_assessment
 ```
 
-### 2. Create a virtual environment
+### 2. Create a Virtual Environment
 
 ```bash
 python -m venv .venv
 ```
 
-Activate the virtual environment.
+Activate the environment.
 
-**Windows PowerShell:**
+Windows PowerShell:
 
 ```powershell
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
-**macOS/Linux:**
+Linux/macOS:
 
 ```bash
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+### 3. Install Dependencies
 
 ```bash
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-### 4. Create the MySQL database
+### 4. Configure MySQL
 
-Log in to MySQL and execute:
+Ensure MySQL Server is installed and running.
 
-```sql
-CREATE DATABASE IF NOT EXISTS machine_risks_db;
+Create the database and required tables using the SQL definitions provided in `schema.sql`.
+
+For a fresh database, you can import the schema using:
+
+```bash
+mysql -u root -p < schema.sql
 ```
 
-Create a dedicated database user if needed:
+Review the SQL script before running it against an existing database.
 
-```sql
-CREATE USER IF NOT EXISTS 'machine_app'@'localhost'
-IDENTIFIED BY 'replace_with_a_secure_password';
+### 5. Configure Environment Variables
 
-GRANT ALL PRIVILEGES ON machine_risks_db.*
-TO 'machine_app'@'localhost';
-```
+Create a `.env` file in the project root.
 
-Use your own secure password. These commands are intended for initial setup by an account with the required MySQL privileges.
+Configure the MySQL connection values expected by `app.py`.
 
-### 5. Configure environment variables
+Do not commit `.env` to version control because it may contain database credentials.
 
-Create a `.env` file in the project root:
-
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=machine_risks_db
-DB_USER=machine_app
-DB_PASSWORD=your_mysql_password
-```
-
-Replace the example values with your actual database credentials.
-
-The `.env` file is excluded from Git using `.gitignore`.
-
-### 6. Start the application
+### 6. Start the Application
 
 ```bash
 python app.py
 ```
 
-Open the application in your browser:
-
-http://127.0.0.1:5000
-
-The application automatically creates the required tables and initializes the default machine fields during startup.
-
-## Database Design
-
-The application uses two MySQL tables.
-
-### fields
-
-Stores configurable attribute definitions, including:
-
-- Field name
-- Display label
-- Data type
-- Required or optional status
-- Dropdown options
-- Creation timestamp
-
-### machines
-
-Stores machine records, including:
-
-- Unique machine ID
-- Machine attributes in a JSON column
-- Creation timestamp
-- Last updated timestamp
-
-The JSON-based design allows new machine attributes to be introduced without modifying the database table structure.
-
-## Database Schema
-
-The complete table definitions are provided in [`schema.sql`](schema.sql).
-
-The application creates the tables and initializes default fields automatically when started using `python app.py`. Running `schema.sql` manually is optional.
-
-Default machine fields:
-
-| Field | Type | Required |
-|---|---|---|
-| Machine Name | Text | Yes |
-| Temperature | Number | Yes |
-| Pressure | Number | Yes |
-| Vibration | Dropdown | Yes |
-
-Vibration supports `Low`, `Medium`, and `High`.
-
-Core fields are protected from deletion or incompatible modification because the risk prediction model depends on their structure and expected values.
+Open the local address displayed by Flask in your browser.
 
 ## Dynamic Field Management
 
-Users can create additional machine attributes through the field configuration interface.
+Machine attributes are configured using field definitions rather than hard-coded database columns.
 
-Supported field types:
+The application supports a workflow where:
 
-- **Text:** Textual values.
-- **Number:** Numeric measurements.
-- **Dropdown:** Selection from predefined options.
+1. A field definition is created.
+2. The frontend retrieves the available field definitions.
+3. The machine form is generated using those definitions.
+4. Submitted values are validated by the backend.
+5. Machine data is stored in MySQL as JSON.
 
-Fields can be configured as required or optional, subject to compatibility with existing records.
+For example, a new field named `humidity` can be introduced without adding a separate humidity column to the machines table.
 
-The application validates machine data against the configured field definitions.
+This makes the data-management layer more flexible as requirements change.
 
-Numeric strings such as `"85"` are converted to numeric values before newly created or updated machine records are stored.
+## Machine Record Management
 
-Boolean values are rejected for numeric fields. Required text fields cannot contain only whitespace, and surrounding whitespace is removed from text values.
+The application provides CRUD functionality:
 
-## Example: Adding Humidity
+- **Create:** Add a machine with its configured attributes.
+- **Read:** Retrieve stored machine records.
+- **Update:** Modify existing machine information.
+- **Delete:** Remove machine records.
 
-The application demonstrates how optional machine attributes can be added without changing the MySQL schema.
+Backend validation helps prevent invalid data from being stored.
 
-### Steps
+Numeric inputs are normalized to numeric values, and required text fields cannot contain only whitespace.
 
-1. Open the field configuration section.
-2. Enter `Humidity` as the field label.
-3. Select `Number` as the field type.
-4. Leave the field optional.
-5. Save the new field.
+## Local Machine Learning Model
 
-Humidity automatically appears in the machine creation and editing forms.
+The project uses a Random Forest Classifier implemented with scikit-learn.
 
-Existing machines can remain valid without a Humidity value.
-
-### Impact on Machine Learning
-
-The current prediction model uses only:
-
-- Temperature
-- Pressure
-- Vibration
-
-Humidity is stored as a configurable machine attribute but is not used by the current prediction model.
-
-**Retraining for Humidity is not part of the current implementation.**
-
-To incorporate Humidity into future predictions, the following changes would be required:
-
-1. Collect appropriate training data containing Humidity measurements and corresponding risk labels.
-2. Add `humidity` to the model's feature configuration.
-3. Handle missing Humidity values because the field is optional.
-4. Update model preprocessing and training logic.
-5. Retrain the model using the expanded feature set.
-6. Evaluate the updated model on separate test data.
-7. Version the updated model and document its performance.
-
-This design separates flexible machine data storage from the specific features used for machine learning.
-
-## Risk Prediction
-
-The application uses a local Random Forest classifier implemented with scikit-learn.
+The model is trained locally using synthetic machine operating conditions.
 
 ### Input Features
 
 | Feature | Description |
 |---|---|
-| Temperature | Machine temperature |
-| Pressure | Machine pressure |
-| Vibration | Low, Medium, or High vibration level |
+| temperature | Numeric machine temperature |
+| pressure | Numeric machine pressure |
+| vibration | Categorical vibration level: Low, Medium, High |
 
-### Prediction Categories
+### Output Classes
+
+The model predicts one of three risk levels:
 
 - Low Risk
 - Medium Risk
 - High Risk
 
-The model is trained using synthetic machine readings and illustrative risk-labeling rules.
+### Training Approach
 
-Categorical vibration values are processed using one-hot encoding.
+The training dataset contains 1,200 synthetically generated samples.
 
-The prediction model runs locally without an external machine learning API.
+The data is generated using a fixed random seed to support reproducibility.
 
-### Assessment Example
+The synthetic risk labels are determined using a scoring system based on temperature, pressure, and vibration.
 
-Input:
+The scoring logic is:
+
+| Condition | Score |
+|---|---:|
+| Temperature greater than 75 | +1 |
+| Temperature greater than 95 | +1 |
+| Pressure greater than 130 | +1 |
+| Pressure greater than 165 | +1 |
+| Vibration = Medium | +1 |
+| Vibration = High | +3 |
+
+The final risk classification is:
+
+| Total Score | Risk Level |
+|---|---|
+| 0–1 | Low Risk |
+| 2–3 | Medium Risk |
+| 4 or above | High Risk |
+
+These thresholds are illustrative rules used to generate synthetic labels. They are not validated industrial safety thresholds.
+
+### Model Pipeline
+
+The Machine Learning pipeline includes:
+
+1. One-hot encoding of the categorical vibration feature.
+2. Passing numerical features to the classifier.
+3. Training a Random Forest Classifier.
+4. Predicting the machine's risk level.
+
+The classifier uses:
+
+- 90 decision trees
+- Random state: 42
+- Minimum samples per leaf: 2
+
+The trained model is created locally when the model module is loaded.
+
+## Example Prediction
+
+Consider the following machine readings:
 
 ```json
 {
@@ -283,194 +287,145 @@ Input:
 }
 ```
 
-Expected prediction:
+The synthetic scoring rules assign:
 
-```text
-High Risk
-```
+- Temperature greater than 75: +1
+- Temperature greater than 95: +0
+- Pressure greater than 130: +0
+- Pressure greater than 165: +0
+- High vibration: +3
 
-This example is verified by an automated regression test.
+Total score: 4
+
+Expected risk according to the synthetic labeling rules:
+
+**High Risk**
+
+A regression test verifies that the local model predicts High Risk for this assessment example.
 
 ## Model Evaluation
 
-The updated Random Forest model was evaluated using 300 separately generated synthetic samples.
+The model was evaluated on a separate synthetic dataset containing 300 samples.
+
+The evaluation uses a different random seed from the training dataset and follows the same synthetic labeling rules.
+
+Run the evaluation using:
+
+```bash
+python -m ml.evaluate
+```
 
 ### Evaluation Results
 
 | Metric | Result |
-|---|---|
-| Accuracy | 95.00% |
-| Correct predictions | 285 |
-| Incorrect predictions | 15 |
+|---|---:|
 | Evaluation samples | 300 |
+| Accuracy | 99.33% |
+| Correct predictions | 298 |
+| Incorrect predictions | 2 |
 
 ### Classification Report
 
-| Risk Category | Precision | Recall | F1-Score | Support |
+| Risk Level | Precision | Recall | F1-score | Support |
 |---|---:|---:|---:|---:|
 | Low Risk | 1.00 | 0.99 | 0.99 | 80 |
-| Medium Risk | 0.99 | 0.91 | 0.95 | 152 |
-| High Risk | 0.84 | 0.99 | 0.91 | 68 |
-| **Weighted Average** | **0.96** | **0.95** | **0.95** | **300** |
+| Medium Risk | 0.99 | 1.00 | 0.99 | 139 |
+| High Risk | 1.00 | 0.99 | 0.99 | 81 |
 
 ### Confusion Matrix
 
-```text
-[[ 79   1   0]
- [  0 139  13]
- [  0   1  67]]
-```
+| Actual / Predicted | Low Risk | Medium Risk | High Risk |
+|---|---:|---:|---:|
+| Low Risk | 79 | 1 | 0 |
+| Medium Risk | 0 | 139 | 0 |
+| High Risk | 0 | 1 | 80 |
 
-Class order:
+The model correctly classified 298 of the 300 evaluation samples.
 
-```text
-['Low Risk', 'Medium Risk', 'High Risk']
-```
+**Important:** These results measure performance against synthetically generated labels. They do not demonstrate the model's accuracy on real-world industrial equipment or actual machine failures.
 
-Run model evaluation:
+## Automated Testing
 
-```bash
-python -m ml.evaluate
-```
+The project includes automated tests for application behavior and Machine Learning predictions.
 
-**Evaluation limitation:** These metrics describe performance on synthetic examples generated using the same illustrative labeling rules used during training. They do not establish real-world industrial failure prediction performance.
-
-The model demonstrates local machine learning integration rather than production-ready predictive maintenance.
-
-## API Endpoints
-
-### Field Management
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/fields` | Retrieve field definitions |
-| POST | `/api/fields` | Create a custom field |
-| PUT | `/api/fields/<id>` | Update a custom field |
-| DELETE | `/api/fields/<id>` | Delete a custom field |
-
-### Machine Management
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/machines` | Retrieve machine records |
-| POST | `/api/machines` | Create a machine |
-| PUT | `/api/machines/<id>` | Update a machine |
-| DELETE | `/api/machines/<id>` | Delete a machine |
-
-### Risk Prediction
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/predict/<id>` | Predict risk for a machine |
-
-The prediction endpoint retrieves the machine record, extracts the required model features, and returns the predicted risk category.
-
-## Testing
-
-The project includes **29 automated tests** using pytest.
-
-### Flask API and Validation Tests â€” 24
-
-Tests cover:
-
-- Home page response
-- Field retrieval and creation
-- Machine CRUD operations
-- Required-field validation
-- Invalid numeric input handling
-- Numeric string conversion
-- Boolean rejection for numeric fields
-- Whitespace-only required text rejection
-- Invalid dropdown selections
-- Unknown field rejection
-- Invalid JSON handling
-- Custom field management
-- Core-field protection
-- Risk prediction endpoints
-- Missing machine and missing feature handling
-
-These tests use mocked field definitions and database access where applicable. They do not modify a real MySQL database.
-
-### Machine Learning Tests â€” 5
-
-Tests cover:
-
-- Valid risk prediction categories
-- Prediction repeatability
-- The assessment's High Risk example
-
-The regression test verifies:
-
-```text
-Temperature = 85
-Pressure = 120
-Vibration = High
-
-Expected prediction: High Risk
-```
-
-### Run All Tests
+Run all tests using:
 
 ```bash
-python -m pytest -v
+python -m pytest -q
 ```
 
-Latest test result:
+### Final Test Results
 
 ```text
-29 passed in 1.39s
+.............................                            [100%]
+29 passed in 1.32s
 ```
 
-### Run Model Evaluation
+The tests cover machine-management behavior, input validation, prediction behavior, and a regression case for the assessment's High Risk example.
 
-```bash
-python -m ml.evaluate
-```
+The API tests use mocked database interactions, allowing them to run without modifying production or existing MySQL records.
 
-## Security and Validation
+## Error Handling and Validation
 
-The application includes the following safeguards:
+The application validates incoming machine data before storing it.
 
-- Database credentials are loaded from environment variables.
-- The `.env` file is excluded from version control.
-- SQL statements use parameterized queries for user-provided values.
-- Machine attributes are validated against configured field definitions.
-- Numeric strings are normalized before saving.
-- Boolean values are rejected for numeric fields.
-- Required text values cannot contain only whitespace.
-- Dropdown values are checked against configured options.
-- Core fields used by the ML model are protected.
-- Flask binds to localhost by default.
-- Debug mode is disabled by default.
+Validation includes:
 
-The application is designed as a local assessment prototype and does not include production authentication or authorization.
+- Checking required fields.
+- Rejecting missing required values.
+- Rejecting whitespace-only required text values.
+- Validating numeric fields.
+- Rejecting boolean values where numeric values are expected.
+- Converting valid numeric input strings to numbers.
 
-## Limitations and Future Improvements
+This improves consistency between frontend inputs and stored machine attributes.
 
-- The ML model uses synthetic training data rather than historical industrial sensor readings.
-- Predictions are displayed in the browser rather than stored as historical results.
-- The model currently uses only Temperature, Pressure, and Vibration.
-- Incorporating additional ML features requires suitable data, preprocessing changes, retraining, and evaluation.
-- Automated API tests mock database access; dedicated MySQL integration tests could be added.
-- Authentication, monitoring alerts, and production deployment are outside the current scope.
+## Design Decisions
 
-Potential future improvements include:
+### Dynamic Fields Instead of Fixed Columns
 
-- Training with real machine sensor datasets.
-- Incorporating Humidity and additional sensor measurements.
-- Saving prediction history.
-- Adding monitoring alerts and model performance tracking.
-- Adding automated integration tests using a dedicated test database.
+Field definitions allow the application to evolve without a database migration for every new machine attribute.
 
-## Project Purpose
+### MySQL JSON for Machine Attributes
 
-This project demonstrates:
+JSON storage provides flexibility while preserving relational database support for core records.
 
-- Full-stack development using Flask and JavaScript.
-- Dynamic database-driven forms and configurable attributes.
-- JSON-based data storage in MySQL.
-- REST API development and input validation.
-- Local machine learning integration using scikit-learn.
-- Automated testing and model evaluation.
+### Local Prediction Instead of External APIs
 
-The implementation focuses on meeting the assessment requirements through a functional local application with extensible machine attributes and risk prediction capabilities.
+The Machine Learning model runs locally, so risk predictions do not require an external ML service.
+
+### Random Forest Classifier
+
+Random Forest provides a straightforward approach for classifying machine readings using numerical and categorical features.
+
+### Synthetic Dataset
+
+Synthetic data makes the demonstration reproducible when real machine datasets are unavailable.
+
+## Limitations
+
+- The Machine Learning model is trained and evaluated using synthetic data.
+- Risk labels are generated from predefined scoring rules rather than real machine failure records.
+- The reported accuracy should not be interpreted as real-world failure prediction accuracy.
+- The prediction model currently uses only temperature, pressure, and vibration.
+- Additional dynamic fields can be stored, but they do not automatically become Machine Learning features.
+- Real industrial deployment would require validated operational data, monitoring, and further model evaluation.
+
+## Future Improvements
+
+Potential improvements include:
+
+- Training with real historical machine and failure data.
+- Adding additional sensor features.
+- Supporting configurable Machine Learning features.
+- Adding model versioning and persistence.
+- Improving monitoring and operational reporting.
+- Expanding integration and end-to-end testing.
+
+## Conclusion
+
+This project demonstrates a complete workflow for managing flexible machine data and generating local Machine Learning predictions.
+
+It combines dynamic field management, MySQL JSON storage, Flask-based backend operations, frontend interaction, input validation, and a reproducible Random Forest evaluation.
+
+The final synthetic evaluation achieved **99.33% accuracy**, and **all 29 automated tests passed**.
