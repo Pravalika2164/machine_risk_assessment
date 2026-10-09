@@ -124,10 +124,9 @@ These metrics describe performance on synthetic examples generated from the same
 | POST | `/api/predict/<id>` | Predict machine risk |
 
 ## Testing
-
-Run model tests:
-
-`python -m pytest tests/test_model.py -v`
+The project includes automated tests using pytest.
+- 21 Flask API tests: Machine CRUD operations, dynamic field management, input validation, core-field protection, and risk prediction endpoints.
+- 4 machine learning tests: Risk classification and prediction repeatability.
 
 Run model evaluation:
 
