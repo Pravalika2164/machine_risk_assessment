@@ -1,0 +1,227 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Machine Risk Console</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/app.js" defer></script>
+</head>
+
+<body>
+    <main>
+        <header>
+            <div>
+                <span class="eyebrow">
+                    LOCAL OPERATIONS / MACHINE INTELLIGENCE
+                </span>
+
+                <h1>Machine Risk Console</h1>
+
+                <p>
+                    Configure fields, manage assets, and predict
+                    machine risk — all locally.
+                </p>
+            </div>
+
+            <div class="status">
+                ● Local ML enabled
+            </div>
+        </header>
+
+        <!-- DASHBOARD STATISTICS -->
+        <section class="stats">
+            <div>
+                <span>Machines</span>
+                <strong id="machineCount">0</strong>
+            </div>
+
+            <div>
+                <span>Configured fields</span>
+                <strong id="fieldCount">0</strong>
+            </div>
+
+            <div>
+                <span>Prediction engine</span>
+                <strong>Random Forest</strong>
+            </div>
+        </section>
+
+        <div class="layout">
+
+            <!-- FIELD CONFIGURATION -->
+            <section class="panel">
+                <h2>01 / Field configuration</h2>
+
+                <p>
+                    Configure reusable fields for all machines.
+                    Custom fields can be edited or deleted.
+                </p>
+
+                <div id="fieldList" class="chips"></div>
+
+                <form id="fieldForm">
+                    <label>
+                        Field name
+                        <input
+                            id="fieldName"
+                            placeholder="e.g. Humidity"
+                            maxlength="80"
+                            required
+                        >
+                    </label>
+
+                    <label>
+                        Type
+                        <select id="fieldType">
+                            <option value="text">Text</option>
+                            <option value="number">Number</option>
+                            <option value="dropdown">Dropdown</option>
+                        </select>
+                    </label>
+
+                    <label id="optionsWrap" hidden>
+                        Dropdown options (comma separated)
+                        <input
+                            id="fieldOptions"
+                            placeholder="Low, Medium, High"
+                        >
+                    </label>
+
+                    <label class="check">
+                        <input id="fieldRequired" type="checkbox">
+                        Required
+                    </label>
+
+                    <button type="submit">Add field</button>
+                </form>
+            </section>
+
+            <!-- MACHINE EDITOR -->
+            <section class="panel">
+                <h2>02 / Machine editor</h2>
+
+                <p>
+                    Machine inputs are generated automatically
+                    from your field configuration.
+                </p>
+
+                <form id="machineForm">
+                    <div id="dynamicInputs"></div>
+
+                    <div class="actions">
+                        <button type="submit" id="saveMachine">
+                            Save machine
+                        </button>
+
+                        <button
+                            type="button"
+                            class="secondary"
+                            id="resetForm"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <!-- MACHINE RECORDS -->
+        <section class="panel wide">
+            <h2>03 / Machine records & risk predictions</h2>
+
+            <p>
+                Run local risk predictions using Temperature,
+                Pressure and Vibration.
+            </p>
+
+            <div class="tableWrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>ID</th>
+                            <th>Machine</th>
+                            <th>Attributes</th>
+                            <th>Risk</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="machineRows"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            Local-only demo · Synthetic training data ·
+            Not suitable for real-world safety decisions
+        </footer>
+    </main>
+
+    <!-- EDIT FIELD DIALOG -->
+    <dialog id="editFieldDialog" aria-labelledby="editFieldTitle">
+        <form id="editFieldForm">
+            <h2 id="editFieldTitle">Edit custom field</h2>
+
+            <p>
+                Update the field configuration.
+                Existing machine values will be validated.
+            </p>
+
+            <label>
+                Field label
+                <input
+                    id="editFieldLabel"
+                    maxlength="80"
+                    required
+                >
+            </label>
+
+            <label>
+                Field type
+                <select id="editFieldType">
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="dropdown">Dropdown</option>
+                </select>
+            </label>
+
+            <label id="editOptionsWrap" hidden>
+                Dropdown options (comma separated)
+                <input
+                    id="editFieldOptions"
+                    placeholder="Low, Medium, High"
+                >
+            </label>
+
+            <label class="check">
+                <input
+                    id="editFieldRequired"
+                    type="checkbox"
+                >
+                Required
+            </label>
+
+            <div class="actions">
+                <button type="submit">
+                    Save changes
+                </button>
+
+                <button
+                    type="button"
+                    class="secondary"
+                    id="cancelFieldEdit"
+                >
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- NOTIFICATIONS -->
+    <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
