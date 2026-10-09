@@ -73,6 +73,17 @@ The `machines` table stores machine records with their configurable attributes i
 
 Adding a custom field does not require an `ALTER TABLE` operation.
 
+## Database Schema
+
+The complete MySQL table definitions are provided in [`schema.sql`](schema.sql).
+
+The database contains two tables:
+
+- `fields` — stores dynamic field definitions, including types, validation requirements, and dropdown options.
+- `machines` — stores machine information using a JSON column to support configurable attributes.
+
+The Flask application automatically creates both tables and initializes the default machine fields on startup. Running `schema.sql` manually is optional.
+
 ## Example: Adding Humidity
 
 1. Open the field configuration section.
