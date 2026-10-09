@@ -40,3 +40,14 @@ def test_prediction_is_repeatable():
     second = predict(machine)
 
     assert first == second
+
+def test_assessment_example_high_risk():
+    from ml.model import predict
+
+    result = predict({
+        "temperature": 85,
+        "pressure": 120,
+        "vibration": "High"
+    })
+
+    assert result == "High Risk"

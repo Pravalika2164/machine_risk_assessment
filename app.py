@@ -182,55 +182,62 @@ def valid_dropdown_options(options):
     )
 
 
+
 def validate(data):
     if not isinstance(data, dict):
         return "Expected a JSON object"
 
     configured_fields = fields()
 
+    allowed_names = {
+        field["name"] for field in configured_fields
+    }
+
+    if set(data) - allowed_names:
+        return "Unknown fields are not allowed"
+
     for field in configured_fields:
-        value = data.get(field["name"])
+        name = field["name"]
+        label = field["label"]
+        value = data.get(name)
+
+        if field["type"] == "text" and isinstance(value, str):
+            value = value.strip()
+            data[name] = value
 
         if field["required"] and (
             value is None or value == ""
         ):
-            return f'{field["label"]} is required'
+            return f"{label} is required"
 
         if value is None or value == "":
             continue
 
         if field["type"] == "number":
+            if isinstance(value, bool):
+                return f"{label} must be a valid number"
+
             try:
                 number = float(value)
 
                 if not (-1e12 < number < 1e12):
                     raise ValueError()
 
+                data[name] = number
+
             except (ValueError, TypeError, OverflowError):
-                return (
-                    f'{field["label"]} must be a valid number'
-                )
+                return f"{label} must be a valid number"
 
         elif field["type"] == "dropdown":
-            if value not in field["options"]:
-                return (
-                    f'{field["label"]} must match '
-                    "a dropdown option"
-                )
+            if not isinstance(value, str) or value not in field["options"]:
+                return f"{label} must match a dropdown option"
 
         elif field["type"] == "text":
             if not isinstance(value, str):
-                return f'{field["label"]} must be text'
-
-    allowed_names = {
-        field["name"]
-        for field in configured_fields
-    }
-
-    if set(data) - allowed_names:
-        return "Unknown fields are not allowed"
+                return f"{label} must be text"
 
     return None
+
 
 
 # --------------------------------------------------

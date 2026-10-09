@@ -343,3 +343,41 @@ def test_predict_missing_features(client, fake_db):
     response = client.post("/api/predict/1")
 
     assert response.status_code == 400
+
+
+def test_number_string_is_converted(monkeypatch):
+    import app
+
+    monkeypatch.setattr(app, "fields", lambda: [
+        {"name": "temperature", "label": "Temperature",
+         "type": "number", "required": True}
+    ])
+
+    data = {"temperature": "85"}
+    assert app.validate(data) is None
+    assert data["temperature"] == 85.0
+    assert isinstance(data["temperature"], float)
+
+
+def test_boolean_is_rejected_as_number(monkeypatch):
+    import app
+
+    monkeypatch.setattr(app, "fields", lambda: [
+        {"name": "temperature", "label": "Temperature",
+         "type": "number", "required": True}
+    ])
+
+    data = {"temperature": True}
+    assert app.validate(data) == "Temperature must be a valid number"
+
+
+def test_whitespace_only_required_text_is_rejected(monkeypatch):
+    import app
+
+    monkeypatch.setattr(app, "fields", lambda: [
+        {"name": "machine_name", "label": "Machine Name",
+         "type": "text", "required": True}
+    ])
+
+    data = {"machine_name": "   "}
+    assert app.validate(data) == "Machine Name is required"
